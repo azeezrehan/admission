@@ -6,12 +6,12 @@ import base64
 import io
 from twilio.rest import Client
 
-
+# MongoDB connection
 myclient = MongoClient("mongodb+srv://azeez:root@cluster0.l0xey.mongodb.net/")
 mydb = myclient["college_admission"]
 mycol = mydb["applicants"]
 
-
+# Twilio setup
 TWILIO_ACCOUNT_SID = 'AC78f066284b8f04293c05e98b00171be9'
 TWILIO_AUTH_TOKEN = 'f1dbfd30842b30576be0fe74c776e22e'
 TWILIO_PHONE_NUMBER = '+18149148862'
@@ -21,7 +21,6 @@ def encode_image(image):
     buffered = io.BytesIO()
     image.save(buffered, format="JPEG")
     return base64.b64encode(buffered.getvalue()).decode('utf-8')
-
 
 def send_sms(to_phone_number, message):
     twilio_client.messages.create(
@@ -55,15 +54,12 @@ def main():
     physics_mark = st.number_input("12th Physics Mark", min_value=0)
     chemistry_mark = st.number_input("12th Chemistry Mark", min_value=0)
     maths_mark = st.number_input("12th Mathematics Mark", min_value=0)
-    
+
     if st.button("Submit"):
         dob_str = dob.strftime('%Y-%m-%d')
         phy_chem = (physics_mark + chemistry_mark) / 2
         cutoff = (maths_mark + phy_chem)
-        if image_file is not None:
-            image = Image.open(image_file)
-            image_base64 = encode_image(image)
-
+        
         applicant = {
             "name": name,
             "father_name": father_name,
@@ -83,6 +79,12 @@ def main():
             "maths_mark": maths_mark,
             "cutoff": cutoff
         }
+        
+        if image_file is not None:
+            image = Image.open(image_file)
+            image_base64 = encode_image(image)
+            applicant["profile_picture"] = image_base64
+
         mycol.insert_one(applicant)
 
         st.write(f"Cutoff: {cutoff}")
@@ -120,7 +122,6 @@ def main():
         st.session_state.submitted = True
         st.session_state.eligible_courses = eligible_courses
 
-
     if st.session_state.submitted:
         selected_course = st.selectbox("Select the course name", st.session_state.eligible_courses)
         if st.button("Register"):
@@ -130,12 +131,8 @@ def main():
                 message = (f"Dear {name}, you have been successfully registered. Selected course is: {selected_course}.")
                 send_sms(mobile_no, message)
                 st.success("SMS sent successfully!")
-                st.success("Registered successfully")
             else:
                 st.error("Invalid course for your cutoff")
-
-   
-   
 
 if __name__ == '_main_':
     main()
