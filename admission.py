@@ -6,6 +6,7 @@ import base64
 import io
 from twilio.rest import Client
 
+
 # MongoDB connection
 myclient = MongoClient("mongodb+srv://azeez:root@cluster0.l0xey.mongodb.net/")
 mydb = myclient["college_admission"]
